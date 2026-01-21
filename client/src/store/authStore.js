@@ -8,7 +8,7 @@ export const useAuthStore = create(
       user: null,
       profile: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
       error: null,
 
       // Initialize auth state
@@ -23,9 +23,36 @@ export const useAuthStore = create(
               profile,
               isAuthenticated: true 
             })
+          } else {
+            // No session - clear state
+            set({ 
+              user: null, 
+              profile: null, 
+              isAuthenticated: false 
+            })
           }
+
+          // Listen for auth state changes
+          supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state changed:', event)
+            if (event === 'SIGNED_IN' && session?.user) {
+              const { data: profile } = await getProfile(session.user.id)
+              set({ 
+                user: { ...session.user, role: profile?.role || 'patient' },
+                profile,
+                isAuthenticated: true 
+              })
+            } else if (event === 'SIGNED_OUT') {
+              set({ 
+                user: null, 
+                profile: null, 
+                isAuthenticated: false 
+              })
+            }
+          })
         } catch (error) {
           console.error('Auth initialization error:', error)
+          set({ user: null, profile: null, isAuthenticated: false })
         } finally {
           set({ isLoading: false })
         }
@@ -38,15 +65,26 @@ export const useAuthStore = create(
           const { data, error } = await signIn(email, password)
           if (error) throw error
           
-          const { data: profile } = await getProfile(data.user.id)
+          // Wait a bit for profile to be ready
+          await new Promise(resolve => setTimeout(resolve, 300))
+          
+          const { data: profile, error: profileError } = await getProfile(data.user.id)
+          
+          if (profileError) {
+            console.error('Profile fetch error:', profileError)
+          }
+          
+          const role = profile?.role || data.user.user_metadata?.role || 'patient'
+          
           set({ 
-            user: { ...data.user, role: profile?.role || 'patient' },
-            profile,
+            user: { ...data.user, role },
+            profile: profile || { role, name: data.user.user_metadata?.name, email: data.user.email },
             isAuthenticated: true,
             isLoading: false 
           })
-          return { success: true, role: profile?.role }
+          return { success: true, role }
         } catch (error) {
+          console.error('Login error:', error)
           set({ error: error.message, isLoading: false })
           return { success: false, error: error.message }
         }

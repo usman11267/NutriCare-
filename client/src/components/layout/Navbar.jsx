@@ -117,6 +117,14 @@ const Navbar = () => {
                           {user?.role}
                         </span>
                       </div>
+                      <Link
+                        to={user?.role === 'dietitian' ? '/dietitian/profile' : '/patient/profile'}
+                        onClick={() => setShowUserMenu(false)}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        My Profile
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:text-white hover:bg-white/5 flex items-center gap-2"

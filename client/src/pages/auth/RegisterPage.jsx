@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Mail, Lock, Eye, EyeOff, User, UserPlus, Apple, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, UserPlus, Apple, AlertCircle, CheckCircle2, Phone, Stethoscope } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
     role: 'patient'
@@ -29,7 +30,8 @@ const RegisterPage = () => {
     }
     const result = await register(formData.email, formData.password, {
       name: formData.name,
-      role: formData.role
+      role: formData.role,
+      phone: formData.phone
     })
     if (result.success) {
       setSuccess(true)
@@ -98,14 +100,14 @@ const RegisterPage = () => {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { value: 'patient', label: 'Patient', desc: 'Looking for guidance' },
-                    { value: 'dietitian', label: 'Dietitian', desc: 'Providing guidance' }
+                    { value: 'patient', label: 'Patient', desc: 'Looking for guidance', Icon: User },
+                    { value: 'dietitian', label: 'Dietitian', desc: 'Providing guidance', Icon: Stethoscope }
                   ].map((option) => (
                     <label
                       key={option.value}
                       className={`flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
                         formData.role === option.value
-                          ? 'border-primary-500 bg-primary-500/10'
+                          ? 'border-primary-500 bg-primary-500/10 shadow-lg shadow-primary-500/20'
                           : 'border-white/10 hover:border-white/20'
                       }`}
                     >
@@ -117,7 +119,7 @@ const RegisterPage = () => {
                         onChange={handleChange}
                         className="sr-only"
                       />
-                      <User className={`w-6 h-6 mb-2 ${
+                      <option.Icon className={`w-7 h-7 mb-2 ${
                         formData.role === option.value ? 'text-primary-400' : 'text-gray-500'
                       }`} />
                       <span className={`font-medium ${
@@ -161,6 +163,24 @@ const RegisterPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="you@example.com"
+                    className="input-field pl-12"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="03001234567"
                     className="input-field pl-12"
                     required
                   />

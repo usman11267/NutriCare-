@@ -172,23 +172,29 @@ CREATE POLICY "Users can send messages" ON public.messages
 CREATE POLICY "Users can update read status" ON public.messages
     FOR UPDATE USING (auth.uid() = receiver_id);
 
+-- Drop existing triggers FIRST before recreating
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
+DROP TRIGGER IF EXISTS update_appointments_updated_at ON public.appointments;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
 -- Function to automatically create profile on user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.profiles (id, email, name, role)
+    INSERT INTO public.profiles (id, email, name, role, phone)
     VALUES (
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
-        COALESCE(NEW.raw_user_meta_data->>'role', 'patient')
+        COALESCE(NEW.raw_user_meta_data->>'role', 'patient'),
+        NEW.raw_user_meta_data->>'phone'
     );
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger to call the function on user creation
-CREATE OR REPLACE TRIGGER on_auth_user_created
+CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
@@ -201,11 +207,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Drop existing triggers if they exist
-DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
-DROP TRIGGER IF EXISTS update_appointments_updated_at ON public.appointments;
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
 -- Triggers for updated_at
 CREATE TRIGGER update_profiles_updated_at
     BEFORE UPDATE ON public.profiles
@@ -214,5 +215,10 @@ CREATE TRIGGER update_profiles_updated_at
 CREATE TRIGGER update_appointments_updated_at
     BEFORE UPDATE ON public.appointments
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Add policy to allow profile insertion during signup
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON public.profiles;
+CREATE POLICY "Enable insert for authenticated users only" ON public.profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
 
 

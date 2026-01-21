@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Search, 
@@ -10,119 +10,108 @@ import {
   TrendingDown,
   ChevronDown,
   Eye,
-  Mail
+  Mail,
+  Loader2
 } from 'lucide-react'
+import { supabase } from '../../config/supabase'
 
 const Patients = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [selectedPatient, setSelectedPatient] = useState(null)
+  const [patients, setPatients] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Mock patient data
-  const patients = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      avatar: 'SJ',
-      age: 32,
-      goal: 'Weight Loss',
-      startWeight: 78,
-      currentWeight: 72,
-      targetWeight: 65,
-      bmi: 24.8,
-      status: 'active',
-      progress: 'on-track',
-      lastActivity: '2 hours ago',
-      joinedDate: '2025-10-15',
-      nextAppointment: '2026-01-25'
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      email: 'michael.c@email.com',
-      avatar: 'MC',
-      age: 45,
-      goal: 'Diabetes Management',
-      startWeight: 92,
-      currentWeight: 88,
-      targetWeight: 82,
-      bmi: 28.4,
-      status: 'active',
-      progress: 'excellent',
-      lastActivity: '5 hours ago',
-      joinedDate: '2025-09-01',
-      nextAppointment: '2026-01-28'
-    },
-    {
-      id: 3,
-      name: 'Emily Davis',
-      email: 'emily.d@email.com',
-      avatar: 'ED',
-      age: 28,
-      goal: 'Muscle Gain',
-      startWeight: 55,
-      currentWeight: 58,
-      targetWeight: 62,
-      bmi: 21.5,
-      status: 'active',
-      progress: 'on-track',
-      lastActivity: '1 day ago',
-      joinedDate: '2025-11-20',
-      nextAppointment: '2026-02-01'
-    },
-    {
-      id: 4,
-      name: 'James Wilson',
-      email: 'james.w@email.com',
-      avatar: 'JW',
-      age: 52,
-      goal: 'Heart Health',
-      startWeight: 95,
-      currentWeight: 94,
-      targetWeight: 85,
-      bmi: 29.1,
-      status: 'active',
-      progress: 'needs-attention',
-      lastActivity: '3 days ago',
-      joinedDate: '2025-12-01',
-      nextAppointment: null
-    },
-    {
-      id: 5,
-      name: 'Amanda Foster',
-      email: 'amanda.f@email.com',
-      avatar: 'AF',
-      age: 35,
-      goal: 'Sports Nutrition',
-      startWeight: 62,
-      currentWeight: 60,
-      targetWeight: 58,
-      bmi: 22.3,
-      status: 'active',
-      progress: 'excellent',
-      lastActivity: '30 min ago',
-      joinedDate: '2025-08-15',
-      nextAppointment: '2026-01-22'
-    },
-    {
-      id: 6,
-      name: 'Robert Brown',
-      email: 'robert.b@email.com',
-      avatar: 'RB',
-      age: 41,
-      goal: 'Weight Loss',
-      startWeight: 105,
-      currentWeight: 103,
-      targetWeight: 90,
-      bmi: 32.1,
-      status: 'inactive',
-      progress: 'needs-attention',
-      lastActivity: '5 days ago',
-      joinedDate: '2025-11-01',
-      nextAppointment: null
+  // Fetch patients from Supabase
+  useEffect(() => {
+    const fetchPatients = async () => {
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'patient')
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        // Process patients with calculated fields
+        const processedPatients = data.map(patient => {
+          const bmi = patient.weight && patient.height 
+            ? (patient.weight / Math.pow(patient.height / 100, 2)).toFixed(1)
+            : null
+          
+          const initials = patient.name
+            ? patient.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+            : 'NA'
+
+          // Calculate days since last update
+          const lastUpdate = new Date(patient.updated_at || patient.created_at)
+          const now = new Date()
+          const daysSinceUpdate = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24))
+          
+          let status = 'active'
+          let progress = 'on-track'
+          
+          if (daysSinceUpdate > 7) {
+            status = 'inactive'
+            progress = 'needs-attention'
+          } else if (daysSinceUpdate < 2) {
+            progress = 'excellent'
+          }
+
+          return {
+            id: patient.id,
+            name: patient.name || 'Unknown',
+            email: patient.email,
+            phone: patient.phone,
+            avatar: initials,
+            age: patient.date_of_birth ? calculateAge(patient.date_of_birth) : null,
+            goal: patient.goal || 'Not set',
+            startWeight: patient.weight || 0,
+            currentWeight: patient.weight || 0,
+            targetWeight: patient.weight ? patient.weight - 5 : 0,
+            bmi: bmi ? parseFloat(bmi) : null,
+            status,
+            progress,
+            lastActivity: formatTimeAgo(patient.updated_at || patient.created_at),
+            joinedDate: patient.created_at,
+            nextAppointment: null
+          }
+        })
+
+        setPatients(processedPatients)
+      } catch (error) {
+        console.error('Error fetching patients:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ]
+
+    fetchPatients()
+  }, [])
+
+  const calculateAge = (dob) => {
+    const birthDate = new Date(dob)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now - date
+    const diffMins = Math.floor(diffMs / 60000)
+    
+    if (diffMins < 60) return `${diffMins} min ago`
+    if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hours ago`
+    return `${Math.floor(diffMins / 1440)} days ago`
+  }
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -316,7 +305,14 @@ const Patients = () => {
 
         {filteredPatients.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-400">No patients found matching your criteria</p>
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-primary-400" />
+                <span className="text-gray-400">Loading patients...</span>
+              </div>
+            ) : (
+              <p className="text-gray-400">No patients found matching your criteria</p>
+            )}
           </div>
         )}
       </motion.div>

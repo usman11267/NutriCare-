@@ -18,6 +18,7 @@ import PatientAppointments from './pages/patient/Appointments'
 import PatientDietLog from './pages/patient/DietLog'
 import PatientChat from './pages/patient/Chat'
 import PatientAIAssistant from './pages/patient/AIAssistant'
+import PatientProfile from './pages/patient/Profile'
 
 // Dietitian Pages
 import DietitianDashboard from './pages/dietitian/Dashboard'
@@ -101,6 +102,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['patient']}>
                   <PatientAIAssistant />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/patient/profile" 
+              element={
+                <ProtectedRoute allowedRoles={['patient']}>
+                  <PatientProfile />
                 </ProtectedRoute>
               } 
             />

@@ -1,83 +1,70 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Send, Search, Phone, Video, MoreVertical, Check, CheckCheck, Circle } from 'lucide-react'
+import { Send, Search, Phone, Video, MoreVertical, Check, CheckCheck, Circle, Loader2, Users } from 'lucide-react'
+import { useAuthStore } from '../../store/authStore'
+import { supabase } from '../../config/supabase'
+import { sendMessage, subscribeToMessages, getChatRoomId, setTypingStatus } from '../../config/firebase'
 
 const DietitianChat = () => {
+  const { user, profile } = useAuthStore()
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [message, setMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [patients, setPatients] = useState([])
+  const [messages, setMessages] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef(null)
 
-  // Mock patient list with conversations
-  const patients = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      avatar: 'SJ',
-      status: 'online',
-      lastMessage: 'Thank you for the meal plan!',
-      lastMessageTime: '2 min ago',
-      unread: 2,
-      messages: [
-        { id: 1, senderId: 'patient', message: 'Hi Dr. Mitchell, I had a question about my meal plan.', timestamp: new Date(Date.now() - 3600000) },
-        { id: 2, senderId: 'dietitian', message: 'Of course! What would you like to know?', timestamp: new Date(Date.now() - 3500000) },
-        { id: 3, senderId: 'patient', message: 'Can I substitute the chicken with tofu for dinner?', timestamp: new Date(Date.now() - 3400000) },
-        { id: 4, senderId: 'dietitian', message: 'Absolutely! Tofu is a great protein alternative. Just make sure to use firm or extra-firm tofu and season it well.', timestamp: new Date(Date.now() - 3300000) },
-        { id: 5, senderId: 'patient', message: 'Thank you for the meal plan!', timestamp: new Date(Date.now() - 120000) }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      avatar: 'MC',
-      status: 'online',
-      lastMessage: 'My blood sugar has been stable!',
-      lastMessageTime: '15 min ago',
-      unread: 0,
-      messages: [
-        { id: 1, senderId: 'patient', message: 'Dr. Mitchell, I wanted to share some good news.', timestamp: new Date(Date.now() - 1800000) },
-        { id: 2, senderId: 'patient', message: 'My blood sugar has been stable!', timestamp: new Date(Date.now() - 900000) }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Emily Davis',
-      avatar: 'ED',
-      status: 'offline',
-      lastMessage: 'See you at the appointment tomorrow!',
-      lastMessageTime: '1 hour ago',
-      unread: 0,
-      messages: [
-        { id: 1, senderId: 'dietitian', message: 'Hi Emily! Just a reminder about your appointment tomorrow at 12 PM.', timestamp: new Date(Date.now() - 7200000) },
-        { id: 2, senderId: 'patient', message: 'See you at the appointment tomorrow!', timestamp: new Date(Date.now() - 3600000) }
-      ]
-    },
-    {
-      id: 4,
-      name: 'James Wilson',
-      avatar: 'JW',
-      status: 'offline',
-      lastMessage: 'I have a question about sodium intake.',
-      lastMessageTime: '3 hours ago',
-      unread: 1,
-      messages: [
-        { id: 1, senderId: 'patient', message: 'I have a question about sodium intake.', timestamp: new Date(Date.now() - 10800000) }
-      ]
-    },
-    {
-      id: 5,
-      name: 'Amanda Foster',
-      avatar: 'AF',
-      status: 'online',
-      lastMessage: 'The pre-workout snacks are amazing!',
-      lastMessageTime: '30 min ago',
-      unread: 0,
-      messages: [
-        { id: 1, senderId: 'patient', message: 'The pre-workout snacks you recommended are amazing!', timestamp: new Date(Date.now() - 1800000) },
-        { id: 2, senderId: 'dietitian', message: "That's great to hear! How's your energy during workouts?", timestamp: new Date(Date.now() - 1700000) }
-      ]
+  // Fetch patients
+  useEffect(() => {
+    const fetchPatients = async () => {
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'patient')
+          .order('name', { ascending: true })
+
+        if (error) throw error
+        
+        const processedPatients = (data || []).map(patient => ({
+          id: patient.id,
+          name: patient.name || 'Unknown',
+          email: patient.email,
+          avatar: patient.name ? patient.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'NA',
+          status: 'online', // In real app, track online status
+          lastMessage: '',
+          lastMessageTime: '',
+          unread: 0
+        }))
+        
+        setPatients(processedPatients)
+      } catch (error) {
+        console.error('Error fetching patients:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ]
+
+    fetchPatients()
+  }, [])
+
+  // Subscribe to messages when patient is selected
+  useEffect(() => {
+    if (!selectedPatient || !user?.id) return
+
+    const roomId = getChatRoomId(user.id, selectedPatient.id)
+    
+    const unsubscribe = subscribeToMessages(roomId, (newMessages) => {
+      setMessages(newMessages.map(msg => ({
+        ...msg,
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+      })))
+    })
+
+    return () => unsubscribe()
+  }, [selectedPatient, user?.id])
 
   const filteredPatients = patients.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -89,16 +76,45 @@ const DietitianChat = () => {
 
   useEffect(() => {
     scrollToBottom()
-  }, [selectedPatient])
+  }, [messages])
 
-  const handleSend = () => {
-    if (!message.trim() || !selectedPatient) return
-    // In real app, send message to Firebase
-    setMessage('')
+  const handleSend = async () => {
+    if (!message.trim() || !selectedPatient || !user?.id) return
+    
+    const roomId = getChatRoomId(user.id, selectedPatient.id)
+    const userName = profile?.name || user?.email?.split('@')[0] || 'Dietitian'
+    
+    try {
+      await sendMessage(roomId, user.id, userName, message.trim())
+      setMessage('')
+      setTypingStatus(roomId, user.id, false)
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
   }
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-[calc(100vh-200px)] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-400" />
+      </div>
+    )
+  }
+
+  if (patients.length === 0) {
+    return (
+      <div className="h-[calc(100vh-200px)] flex items-center justify-center px-4">
+        <div className="text-center">
+          <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">No Patients Yet</h2>
+          <p className="text-gray-400">Patients will appear here once they register.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -196,24 +212,30 @@ const DietitianChat = () => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {selectedPatient.messages.map((msg) => {
-                const isOwn = msg.senderId === 'dietitian'
-                return (
-                  <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
-                      isOwn 
-                        ? 'bg-primary-500 text-white rounded-br-sm' 
-                        : 'bg-white/10 text-white rounded-bl-sm'
-                    }`}>
-                      <p className="text-sm">{msg.message}</p>
-                      <div className={`flex items-center gap-1 mt-1 ${isOwn ? 'justify-end' : ''}`}>
-                        <span className="text-xs opacity-70">{formatTime(msg.timestamp)}</span>
-                        {isOwn && <CheckCheck className="w-4 h-4 text-blue-300" />}
+              {messages.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <p>No messages yet. Start the conversation!</p>
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isOwn = msg.senderId === user?.id
+                  return (
+                    <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
+                        isOwn 
+                          ? 'bg-primary-500 text-white rounded-br-sm' 
+                          : 'bg-white/10 text-white rounded-bl-sm'
+                      }`}>
+                        <p className="text-sm">{msg.message}</p>
+                        <div className={`flex items-center gap-1 mt-1 ${isOwn ? 'justify-end' : ''}`}>
+                          <span className="text-xs opacity-70">{formatTime(msg.timestamp)}</span>
+                          {isOwn && <CheckCheck className="w-4 h-4 text-blue-300" />}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
               <div ref={messagesEndRef} />
             </div>
 

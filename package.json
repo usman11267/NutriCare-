@@ -1,0 +1,30 @@
+{
+  "name": "nutricare",
+  "version": "1.0.0",
+  "description": "NutriCare – Dietitian Web Application for online diet consultation, monitoring, and AI assistance",
+  "scripts": {
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build:client": "cd client && npm run build",
+    "start:server": "cd server && npm start"
+  },
+  "keywords": [
+    "dietitian",
+    "nutrition",
+    "health",
+    "react",
+    "nodejs",
+    "supabase"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "firebase": "^12.8.0"
+  }
+}
+

@@ -1,6 +1,6 @@
 # 🥗 NutriCare -- Dietitian Web Application
 
-::: {align="center"}
+
 # NutriCare
 
 ### AI-Powered Diet Consultation & Nutrition Management Platform

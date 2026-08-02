@@ -1,232 +1,217 @@
-# 🥗 NutriCare – Dietitian Web Application
+# 🥗 NutriCare -- Dietitian Web Application
 
-A full-stack web application for online diet consultation, monitoring, and AI-powered nutrition assistance. Built with React, Node.js, Supabase, Firebase, and Google Gemini AI.
+::: {align="center"}
+# NutriCare
 
-![NutriCare Banner](https://via.placeholder.com/800x400/22c55e/ffffff?text=NutriCare)
+### AI-Powered Diet Consultation & Nutrition Management Platform
+
+A modern full-stack web application that connects **Patients** with
+**Professional Dietitians** through online consultations, diet tracking,
+AI-powered nutrition assistance, and real-time communication.
+
+🌐 **Live Demo:** https://nutri-care-nine.vercel.app/
+
+📂 **Repository:** https://github.com/usman11267/NutriCare-
+:::
+
+------------------------------------------------------------------------
 
 ## ✨ Features
 
-### For Patients
-- 📊 **BMI Calculator** - Calculate and track your Body Mass Index
-- 📝 **Daily Diet Log** - Log meals with calories and get nutritional insights
-- 📅 **Appointment Booking** - Schedule consultations with dietitians
-- 💬 **Real-time Chat** - Communicate directly with your dietitian
-- 🤖 **AI Assistant** - Get instant nutrition advice powered by Google Gemini
+### 👤 Patient Portal
 
-### For Dietitians
-- 👥 **Patient Management** - View and manage all patients
-- 📈 **Progress Monitoring** - Track patient diet logs and progress
-- ✅ **Appointment Management** - Approve, schedule, and manage appointments
-- 💬 **Real-time Chat** - Communicate with patients instantly
-- 📊 **Dashboard Analytics** - View statistics and patient insights
+-   BMI Calculator
+-   Daily Diet Log
+-   Nutrition Tracking
+-   Appointment Booking
+-   Real-time Chat
+-   AI Nutrition Assistant (Google Gemini)
+-   Personal Dashboard
+-   Progress Monitoring
 
-## 🛠️ Tech Stack
+### 👨‍⚕️ Dietitian Portal
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | React, Vite, Tailwind CSS, Framer Motion |
-| **Backend** | Node.js, Express.js |
-| **Database** | Supabase (PostgreSQL) |
-| **Authentication** | Supabase Auth |
-| **Real-time Chat** | Firebase Realtime Database |
-| **AI** | Google Gemini API |
-| **Charts** | Recharts |
+-   Patient Management
+-   Appointment Approval
+-   Progress Analytics
+-   Diet Plan Management
+-   Dashboard Statistics
+-   Secure Messaging
 
-## 🚀 Quick Start
+------------------------------------------------------------------------
 
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Supabase account (free tier)
-- Firebase account (free tier)
-- Google AI Studio account (for Gemini API)
+## 🛠 Tech Stack
 
-### Installation
+  Category         Technology
+  ---------------- ------------------------------------------
+  Frontend         React, Vite, Tailwind CSS, Framer Motion
+  Backend          Node.js, Express.js
+  Database         Supabase (PostgreSQL)
+  Authentication   Supabase Auth
+  Realtime         Firebase Realtime Database
+  AI               Google Gemini API
+  Charts           Recharts
 
-1. **Clone the repository**
-```bash
-git clone <repository-url>
-cd nutricare
-```
-
-2. **Install dependencies**
-```bash
-# Install root dependencies
-npm install
-
-# Install all project dependencies
-npm run install:all
-```
-
-3. **Set up environment variables**
-
-Create `.env` files from the examples:
-```bash
-# Frontend
-cp client/.env.example client/.env
-
-# Backend
-cp server/.env.example server/.env
-```
-
-4. **Configure Supabase**
-   - Create a new Supabase project
-   - Run the SQL schema from `database/schema.sql`
-   - Copy your project URL and keys to the `.env` files
-
-5. **Configure Firebase**
-   - Create a new Firebase project
-   - Enable Realtime Database
-   - Copy your config to the frontend `.env`
-
-6. **Configure Google Gemini**
-   - Get an API key from Google AI Studio
-   - Add it to the server `.env`
-
-7. **Start the development servers**
-```bash
-npm run dev
-```
-
-This will start:
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3001
+------------------------------------------------------------------------
 
 ## 📁 Project Structure
 
-```
-nutricare/
-├── client/                 # React Frontend
-│   ├── public/
+``` text
+NutriCare/
+├── client/
 │   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── config/         # Supabase & Firebase config
-│   │   ├── pages/          # Page components
-│   │   │   ├── auth/       # Login, Register
-│   │   │   ├── patient/    # Patient pages
-│   │   │   └── dietitian/  # Dietitian pages
-│   │   ├── store/          # Zustand state management
+│   │   ├── components/
+│   │   ├── config/
+│   │   ├── pages/
+│   │   ├── store/
 │   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
+│   │   └── main.jsx
 │   └── package.json
-│
-├── server/                 # Node.js Backend
+├── server/
 │   ├── src/
-│   │   ├── config/         # Supabase & Gemini config
-│   │   ├── middleware/     # Auth middleware
-│   │   ├── routes/         # API routes
+│   │   ├── config/
+│   │   ├── middleware/
+│   │   ├── routes/
 │   │   └── index.js
-│   └── package.json
-│
 ├── database/
-│   └── schema.sql          # PostgreSQL schema
-│
-└── package.json            # Root package.json
+│   └── schema.sql
+└── package.json
 ```
 
-## 🔐 API Endpoints
+------------------------------------------------------------------------
+
+## 🚀 Installation
+
+``` bash
+git clone https://github.com/usman11267/NutriCare-.git
+cd NutriCare-
+
+npm install
+npm run install:all
+
+npm run dev
+```
+
+Frontend:
+
+    http://localhost:5173
+
+Backend:
+
+    http://localhost:3001
+
+------------------------------------------------------------------------
+
+## 🔐 Environment Variables
+
+### client/.env
+
+``` env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_PROJECT_ID=
+```
+
+### server/.env
+
+``` env
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+GEMINI_API_KEY=
+PORT=3001
+```
+
+------------------------------------------------------------------------
+
+## 📡 API
 
 ### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login user |
-| POST | `/api/auth/logout` | Logout user |
-| GET | `/api/auth/me` | Get current user |
 
-### Users
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/users/patients` | Get all patients (dietitian only) |
-| GET | `/api/users/patients/:id` | Get patient details |
-| PATCH | `/api/users/profile` | Update profile |
+-   POST `/api/auth/register`
+-   POST `/api/auth/login`
+-   GET `/api/auth/me`
 
 ### Appointments
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/appointments` | Get appointments |
-| POST | `/api/appointments` | Book appointment |
-| PATCH | `/api/appointments/:id` | Update appointment |
-| DELETE | `/api/appointments/:id` | Cancel appointment |
-| GET | `/api/appointments/available-slots` | Get available time slots |
+
+-   GET `/api/appointments`
+-   POST `/api/appointments`
+-   PATCH `/api/appointments/:id`
 
 ### Diet Logs
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/diet-logs` | Get diet logs |
-| POST | `/api/diet-logs` | Add diet log |
-| DELETE | `/api/diet-logs/:id` | Delete diet log |
-| GET | `/api/diet-logs/analyze` | Get AI analysis |
 
-### AI Assistant
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/ai/chat` | Chat with AI assistant |
-| POST | `/api/ai/bmi-advice` | Get BMI-based advice |
-| POST | `/api/ai/quick-question` | Ask nutrition question |
-| GET | `/api/ai/nutrition/:food` | Get food nutrition info |
+-   GET `/api/diet-logs`
+-   POST `/api/diet-logs`
+-   DELETE `/api/diet-logs/:id`
 
-## 🎨 UI Features
+### AI
 
-- **Modern Dark Theme** - Easy on the eyes with green accent colors
-- **Glassmorphism Effects** - Beautiful blurred glass-like components
-- **Smooth Animations** - Powered by Framer Motion
-- **Responsive Design** - Works on all devices
-- **Custom Typography** - Playfair Display for headings, DM Sans for body
+-   POST `/api/ai/chat`
+-   POST `/api/ai/bmi-advice`
+-   GET `/api/ai/nutrition/:food`
 
-## 🔧 Configuration
+------------------------------------------------------------------------
 
-### Supabase Setup
-1. Create tables using `database/schema.sql`
-2. Enable Row Level Security (RLS)
-3. Configure authentication providers
+## 🎨 UI Highlights
 
-### Firebase Setup
-1. Create Realtime Database
-2. Set security rules for authenticated users
-3. Enable authentication (optional)
+-   Dark Theme
+-   Glassmorphism
+-   Responsive Design
+-   Framer Motion Animations
+-   Modern Dashboard
 
-### Gemini API Setup
-1. Get API key from Google AI Studio
-2. Use `gemini-pro` model for text generation
+------------------------------------------------------------------------
 
 ## 📦 Deployment
 
-### Frontend (Vercel)
-```bash
-cd client
-npm run build
-# Deploy the dist folder to Vercel
-```
+### Frontend
 
-### Backend (Railway/Render)
-```bash
-cd server
-# Deploy to Railway or Render
-# Set environment variables
-```
+Deploy to **Vercel**
+
+### Backend
+
+Deploy to **Render** or **Railway**
+
+------------------------------------------------------------------------
+
+## 🗺 Roadmap
+
+-   Email Notifications
+-   Video Consultations
+-   AI Meal Planner
+-   Payment Integration
+-   Mobile App
+
+------------------------------------------------------------------------
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Fork the repository, create a feature branch, commit your changes, and
+open a Pull Request.
+
+------------------------------------------------------------------------
 
 ## 📄 License
 
-This project is licensed under the ISC License.
+Licensed under the ISC License.
 
-## 👤 Author
+------------------------------------------------------------------------
 
-Built with ❤️ for a healthier world.
+## 👨‍💻 Author
 
----
+**Muhammad Usman**
 
-## 🔗 Links
+Built with ❤️ using React, Node.js, Supabase, Firebase and Google Gemini
+AI.
 
-- [Supabase Documentation](https://supabase.io/docs)
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [Google AI Studio](https://makersuite.google.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Framer Motion](https://www.framer.com/motion/)
+------------------------------------------------------------------------
 
+## 🔗 Useful Links
 
+-   Live Demo: https://nutri-care-nine.vercel.app/
+-   GitHub: https://github.com/usman11267/NutriCare-
+-   Supabase: https://supabase.com/docs
+-   Firebase: https://firebase.google.com/docs
+-   Google AI Studio: https://aistudio.google.com/
+-   Tailwind CSS: https://tailwindcss.com/docs
+-   Framer Motion: https://motion.dev/
